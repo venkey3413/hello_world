@@ -19,7 +19,7 @@ variable "account_id" {
 }
 
 variable "subnet_ids" {
-  description = "subnet-0c2db15cd6f86cbc4", "subnet-09423f07e8dd42458"
+  description = "subnet-0c2db15cd6f86cbc4"
   type        = list(string)
 }
 
