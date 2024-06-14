@@ -1,13 +1,20 @@
-# Dockerfile
+# Use an official Node.js runtime as a parent image
 FROM node:14
 
-WORKDIR /app
+# Set the working directory in the container
+WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
+
+# Install dependencies
 RUN npm install
 
+# Copy the rest of the application code to the working directory
 COPY . .
 
+# Expose port 3000
 EXPOSE 3000
 
-CMD [ "node", "index.js" ]
+# Command to run the application
+CMD ["npm", "start"]
