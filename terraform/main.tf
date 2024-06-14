@@ -36,32 +36,31 @@ resource "aws_ecs_service" "ecs_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = ["subnet-0c2db15cd6f86cbc4"]  # Replace with your subnet ID
-    security_groups = ["sg-096b3e9c824a7ba70"]      # Replace with your security group ID
+    subnets         = ["subnet-0c2db15cd6f86cbc4"]  # Replace with your actual subnet ID
+    security_groups = ["sg-096b3e9c824a7ba70"]       # Replace with your actual security group ID
     assign_public_ip = true
   }
 }
 
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
+  name               = "ecsTaskExecutionRole"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicys",
-  ]
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-
 
 variable "docker_image" {
   description = "Docker image name"
