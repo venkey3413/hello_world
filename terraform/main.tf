@@ -23,6 +23,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
     portMappings = [{
       containerPort = 3000
       hostPort      = 3000
+      protocol      = "tcp"
     }]
   }])
 }
@@ -54,10 +55,11 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       Action = "sts:AssumeRole"
     }]
   })
+}
 
-  managed_policy_arns = [
-    "arn:arn:aws:ecs:us-east-1:958955696306:cluster/my-ecs-cluster",
-  ]
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 variable "docker_image" {
