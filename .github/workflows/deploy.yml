@@ -28,10 +28,10 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/hello-world:latest .
+      run: docker build -t ibuziuk/my-node-app .
       
     - name: Push Docker image to Docker Hub
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/hello-world:latest
+      run: docker push ibuziuk/my-node-app
 
   deploy:
     needs: build
@@ -59,4 +59,4 @@ jobs:
       run: terraform apply -auto-approve
       working-directory: terraform
       env:
-        TF_VAR_docker_image: ${{ secrets.DOCKER_USERNAME }}/hello-world:latest
+        TF_VAR_docker_image: ibuziuk/my-node-app
