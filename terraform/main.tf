@@ -42,16 +42,6 @@ resource "aws_ecs_service" "ecs_service" {
   }
 }
 
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-}
-
 resource "aws_iam_role" "my_ecs_task_execution_role" {
   name = "myEcsTaskExecutionRole"
 
