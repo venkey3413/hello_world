@@ -1,9 +1,9 @@
 provider "aws" {
-  region = var.region
+  region = us-east-1
 
   # Assuming a role if cross-account access is required
   assume_role {
-    role_arn = var.role_arn
+    role_arn = "arn:aws:iam::958955696306:role/venkey11"
   }
 }
 
@@ -30,7 +30,7 @@ resource "aws_ecs_task_definition" "hello_world_task" {
   network_mode             = "awsvpc"
   memory                   = "512"
   cpu                      = "256"
-  execution_role_arn       = "arn:aws:iam::${var.account_id}:role/ecsTaskExecutionRole"
+  execution_role_arn       = "arn:aws:iam::${958955696306}:role/ecsTaskExecutionRole"
 }
 
 # Define the ECS service
@@ -42,8 +42,8 @@ resource "aws_ecs_service" "hello_world_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = var.subnet_ids
-    security_groups = var.security_group_ids
+    subnets         = subnet-0c2db15cd6f86cbc4
+    security_groups = sg-096b3e9c824a7ba70
   }
 }
 
