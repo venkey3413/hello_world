@@ -31,7 +31,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Push Docker image to Docker Hub
-      run: docker push ${{ secrets.DOCKER_USERNAME }} my-node-app:latest
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app:latest
 
   deploy:
     needs: build
