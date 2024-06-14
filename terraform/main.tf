@@ -39,7 +39,7 @@ resource "aws_ecs_service" "example" {
   network_configuration {
     awsvpc {
       subnets          = ["subnet-0c2db15cd6f86cbc4"]
-      security_groups = [g-096b3e9c824a7ba70]
+      security_groups = [sg-096b3e9c824a7ba70]
       assign_public_ip = "ENABLED"
     }
   }
