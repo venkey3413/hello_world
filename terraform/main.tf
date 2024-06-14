@@ -1,8 +1,6 @@
 provider "aws" {
   region = "us-east-1"
-  assume_role {
-    role_arn = "arn:aws:iam::958955696306:role/venkey11"
-  }
+ 
 }
 
 resource "aws_ecs_cluster" "ecs_cluster" {
