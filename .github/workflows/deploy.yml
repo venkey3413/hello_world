@@ -21,17 +21,17 @@ jobs:
     - name: Install dependencies
       run: npm install
 
+    - name: Build Docker image
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-node-app:latest .
+
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build Docker image
-      run: docker build -t venkey3413//my-node-app:latest .
-      
     - name: Push Docker image to Docker Hub
-      run: docker push venkey3413/my-node-app:latest
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-node-app:latest
 
   deploy:
     needs: build
@@ -46,7 +46,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1  # Replace with your desired AWS region
+        aws-region: us-east-1  # Replace with your desired region
 
     - name: Install Terraform
       uses: hashicorp/setup-terraform@v2
@@ -59,4 +59,4 @@ jobs:
       run: terraform apply -auto-approve
       working-directory: terraform
       env:
-        TF_VAR_docker_image: venkey3413/my-node-app:latest
+        TF_VAR_docker_image: ${{ secrets.DOCKERHUB_USERNAME }}/my-node-app:latest
