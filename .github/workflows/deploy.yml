@@ -22,7 +22,7 @@ jobs:
       run: npm install
 
     - name: Build Docker image
-      run: docker build -t your-dockerhub-username/hello-world .
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}***/my-node-app:latest .
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
@@ -31,7 +31,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Push Docker image to Docker Hub
-      run: docker push your-dockerhub-username/hello-world
+      run: docker push ${{ secrets.DOCKER_USERNAME }}***/my-node-app:latest
 
   deploy:
     needs: build
@@ -59,4 +59,4 @@ jobs:
       run: terraform apply -auto-approve
       working-directory: terraform
       env:
-        TF_VAR_docker_image: your-dockerhub-username/hello-world .
+        TF_VAR_docker_image: ${{ secrets.DOCKER_USERNAME }}***/my-node-app:latest
