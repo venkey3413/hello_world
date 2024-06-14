@@ -1,13 +1,13 @@
-# Dockerfile
-FROM node:14
+FROM node:10
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
+COPY package.json ./
+
 RUN npm install
 
 COPY . .
 
 EXPOSE 3000
 
-CMD [ "node", "index.js" ]
+CMD ["npm", "start"]
