@@ -1,106 +1,66 @@
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "main-vpc"
-  }
+provider "aws" {
+  region = "us-east-1"  # Replace with your desired region
 }
 
-resource "aws_subnet" "subnet" {
-  count             = 2
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "main-subnet-${count.index}"
-  }
+resource "aws_ecs_cluster" "ecs_cluster" {
+  name = "my-ecs-cluster"
 }
 
-resource "aws_security_group" "ecs_sg" {
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "ecs-sg"
-  }
-}
-
-resource "aws_ecs_cluster" "main" {
-  name = "main-ecs-cluster"
-}
-
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecs_task_execution_role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-    }]
-  })
-
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-  ]
-}
-
-resource "aws_ecs_task_definition" "hello_world" {
-  family                   = "hello-world"
-  network_mode             = "awsvpc"
+resource "aws_ecs_task_definition" "ecs_task_definition" {
+  family                   = "my-ecs-task"
   requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
-  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
-
-  container_definitions = jsonencode([
-    {
-      name      = "hello-world"
-      image     = "your-dockerhub-username/hello-world:latest"
-      essential = true
-      portMappings = [
-        {
-          containerPort = 3000
-          hostPort      = 3000
-        }
-      ]
-    }
-  ])
+  container_definitions = jsonencode([{
+    name      = "my-node-app"
+    image     = var.docker_image
+    cpu       = 256
+    memory    = 512
+    essential = true
+    portMappings = [{
+      containerPort = 3000
+      hostPort      = 3000
+    }]
+  }])
 }
 
-resource "aws_ecs_service" "hello_world" {
-  name            = "hello-world"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.hello_world.arn
+resource "aws_ecs_service" "ecs_service" {
+  name            = "my-ecs-service"
+  cluster         = aws_ecs_cluster.ecs_cluster.id
+  task_definition = aws_ecs_task_definition.ecs_task_definition.arn
   desired_count   = 1
-
-  launch_type = "FARGATE"
+  launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = aws_subnet.subnet[*].id
-    security_groups  = [aws_security_group.ecs_sg.id]
+    subnets         = ["subnet-05d87a98545cd0c56"]  # Replace with your subnet ID
+    security_groups = ["sg-0561a79cc8203131b"]      # Replace with your security group ID
     assign_public_ip = true
   }
 }
 
-output "service_url" {
-  value = aws_ecs_service.hello_world.id
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "ecsTaskExecutionRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+  ]
+}
+
+variable "docker_image" {
+  description = "Docker image name"
+  type        = string
 }
