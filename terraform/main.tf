@@ -6,6 +6,29 @@ resource "aws_ecs_cluster" "example" {
   name = "example-cluster"
 }
 
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name        = "example-task-execution-role"
+  description = "Execution role for ECS task"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Effect = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
 resource "aws_ecs_task_definition" "example" {
   family                = "example-task-definition"
   requires_compatibilities = ["EC2"]
@@ -30,20 +53,6 @@ resource "aws_ecs_task_definition" "example" {
   ])
 }
 
-resource "aws_ecs_service" "example" {
-  name            = "example-service"
-  cluster         = aws_ecs_cluster.example.name
-  task_definition = aws_ecs_task_definition.example.arn
-  desired_count   = 1
-  launch_type     = "EC2"
-
-  network_configuration {
-    subnets         = ["subnet-0c2db15cd6f86cbc4"]
-    security_groups = [aws_security_group.ecs_service_sg.id]
-    assign_public_ip = true
-  }
-}
-
 resource "aws_security_group" "ecs_service_sg" {
   name        = "example-sg"
   description = "Security group for ECS service"
@@ -64,25 +73,16 @@ resource "aws_security_group" "ecs_service_sg" {
   }
 }
 
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name        = "example-task-execution-role"
-  description = "Execution role for ECS task"
+resource "aws_ecs_service" "example" {
+  name            = "example-service"
+  cluster         = aws_ecs_cluster.example.name
+  task_definition = aws_ecs_task_definition.example.family
+  desired_count   = 1
+  launch_type     = "EC2"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-        Effect = "Allow"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  network_configuration {
+    subnets         = ["subnet-0c2db15cd6f86cbc4"]
+    security_groups = [aws_security_group.ecs_service_sg.id]
+    assign_public_ip = true
+  }
 }
