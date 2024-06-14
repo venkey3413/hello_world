@@ -29,8 +29,8 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
 
 resource "aws_ecs_service" "ecs_service" {
   name            = "my-ecs-service"
-  cluster         = arn:aws:ecs:us-east-1:958955696306:cluster/my-ecs-cluster
-  task_definition = arn:aws:ecs:us-east-1:958955696306:cluster/my-ecs-clusteraws_ecs_task_definition.ecs_task_definition.arn
+  cluster         = aws_ecs_cluster.ecs_cluster.id
+  task_definition = aws_ecs_task_definition.ecs_task_definition.arn
   desired_count   = 1
   launch_type     = "FARGATE"
 
