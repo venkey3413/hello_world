@@ -39,7 +39,7 @@ resource "aws_ecs_service" "example" {
   network_configuration {
     awsvpc_configuration {
       subnets          = ["subnet-0c2db15cd6f86cbc4"]
-      security_groups = [sg-096b3e9c824a7ba70]
+      security_groups = [aws_security_group.ecs_service_sg.id]
       assign_public_ip = "ENABLED"
     }
   }
@@ -48,7 +48,7 @@ resource "aws_ecs_service" "example" {
 resource "aws_security_group" "ecs_service_sg" {
   name        = "example-sg"
   description = "Security group for ECS service"
-  vpc_id      = "vpc-03a619c880116314a"
+  vpc_id      = "sg-096b3e9c824a7ba70"
 
   ingress {
     from_port   = 8080
@@ -80,39 +80,3 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-provider "aws" {
-  region = var.region
-
-  assume_role {
-    role_arn = var.role_arn
-  }
-}
-
-# Define the ECS cluster
-resource "aws_ecs_cluster" "hello_world_cluster" {
-  name = "hello-world-nodejs-cluster"
-}
-
-# Define the ECS task definition
-resource "aws_ecs_task_definition" "hello_world_task" {
-  family                   = "hello-world-nodejs-task"
-  container_definitions    = jsonencode([{
-    name  = "hello-world-nodejs-container"
-    image = var.docker_image
-    memory = 512
-    cpu = 256
-    essential = true
-    portMappings = [{
-      containerPort = 80
-      hostPort      = 80
-    }]
-  }])
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  memory                   = "512"
-  cpu                      = "256"
-  execution_role_arn       = "arn:aws:iam::${var.account_id}:role/ecsTaskExecutionRole"
-}
-
-# Define the ECS service
-resource "aws_ecs_service" "hello_world_service" {
