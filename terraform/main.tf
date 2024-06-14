@@ -37,9 +37,9 @@ resource "aws_ecs_service" "example" {
   desired_count   = 1
   launch_type      = "EC2"
   network_configuration {
-    awsvpc_configuration {
+    awsvpc {
       subnets          = ["subnet-0c2db15cd6f86cbc4"]
-      security_groups = [aws_security_group.ecs_service_sg.id]
+      security_groups = [g-096b3e9c824a7ba70]
       assign_public_ip = "ENABLED"
     }
   }
@@ -48,7 +48,7 @@ resource "aws_ecs_service" "example" {
 resource "aws_security_group" "ecs_service_sg" {
   name        = "example-sg"
   description = "Security group for ECS service"
-  vpc_id      = "sg-096b3e9c824a7ba70"
+  vpc_id      = "vpc-03a619c880116314a"
 
   ingress {
     from_port   = 8080
