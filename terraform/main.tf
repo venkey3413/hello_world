@@ -57,9 +57,9 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"  // Use the existing role name
-  // Rest of the role configuration
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+  ]
 }
 
 
