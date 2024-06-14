@@ -12,7 +12,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  execution_role_arn       = aws_iam_role.my_ecs_task_execution_role.arn  # Reference to IAM role ARN
 
   container_definitions = jsonencode([{
     name      = "my-node-app"
@@ -63,12 +63,10 @@ resource "aws_iam_role" "my_ecs_task_execution_role" {
   ]
 }
 
-
 resource "aws_iam_role_policy_attachment" "my_ecs_task_execution_role_policy" {
   role       = aws_iam_role.my_ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-
 
 variable "docker_image" {
   description = "Docker image name"
