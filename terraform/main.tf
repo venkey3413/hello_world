@@ -10,15 +10,15 @@ resource "aws_ecs_task_definition" "example" {
   family                = "example-task-definition"
   requires_compatibilities = ["EC2"]
   network_mode          = "awsvpc"
-  cpu                    = 1024
-  memory               = 512
-  execution_role_arn   = aws_iam_role.ecs_task_execution_role.arn
+  cpu                   = 1024
+  memory                = 512
+  execution_role_arn    = aws_iam_role.ecs_task_execution_role.arn
   container_definitions = jsonencode([
     {
-      name      = "example-container"
-      image      = "venkey3413/hello_world:latest"
-      cpu        = 10
-      essential = true
+      name         = "example-container"
+      image        = "venkey3413/hello_world:latest"
+      cpu          = 10
+      essential    = true
       portMappings = [
         {
           containerPort = 8080
@@ -35,13 +35,12 @@ resource "aws_ecs_service" "example" {
   cluster         = aws_ecs_cluster.example.name
   task_definition = aws_ecs_task_definition.example.arn
   desired_count   = 1
-  launch_type      = "EC2"
+  launch_type     = "EC2"
+
   network_configuration {
-    awsvpc {
-      subnets          = ["subnet-0c2db15cd6f86cbc4"]
-      security_groups = [sg-096b3e9c824a7ba70]
-      assign_public_ip = "ENABLED"
-    }
+    subnets         = ["subnet-0c2db15cd6f86cbc4"]
+    security_groups = [aws_security_group.ecs_service_sg.id]
+    assign_public_ip = true
   }
 }
 
@@ -54,6 +53,13 @@ resource "aws_security_group" "ecs_service_sg" {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
