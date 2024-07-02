@@ -2,73 +2,67 @@ provider "aws" {
   region = "us-east-1"  # Replace with your desired region
 }
 
-resource "aws_ecs_cluster" "ecs_cluster" {
-  name = "my-ecs-cluster"
+resource "aws_instance" "web" {
+  ami           = "ami-06c68f701d8090592"  # Amazon Linux 2 AMI
+  instance_type = "t2.micro"
+
+  tags = {
+    Name = "GitHubDeployEC2"
+  }
+
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo yum update -y
+              sudo amazon-linux-extras install docker -y
+              sudo service docker start
+              sudo usermod -a -G docker ec2-user
+              # Install git
+              sudo yum install -y git
+              # Clone the GitHub repository
+              git clone ${var.github_repo_url}
+              cd $(basename ${var.github_repo_url} .git)
+              # Build and run the Docker container
+              sudo docker build -t myapp .
+              sudo docker run -d -p 3000:3000 myapp
+              EOF
+
+  key_name = "key"  # Replace with your key pair name
+
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
 }
 
-resource "aws_ecs_task_definition" "ecs_task_definition" {
-  family                   = "my-ecs-task"
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = "256"
-  memory                   = "512"
-  execution_role_arn       = aws_iam_role.my_ecs_task_execution_role.arn  # Reference to IAM role ARN
+resource "aws_security_group" "web_sg" {
+  name        = "web-sg"
+  description = "Allow HTTP and SSH traffic"
 
-  container_definitions = jsonencode([{
-    name      = "my-node-app"
-    image     = var.docker_image
-    cpu       = 256
-    memory    = 512
-    essential = true
-    portMappings = [{
-      containerPort = 3000
-      hostPort      = 3000
-      protocol      = "tcp"
-    }]
-  }])
-}
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-resource "aws_ecs_service" "ecs_service" {
-  name            = "my-ecs-service"
-  cluster         = aws_ecs_cluster.ecs_cluster.id
-  task_definition = aws_ecs_task_definition.ecs_task_definition.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-  network_configuration {
-    subnets         = ["subnet-0c2db15cd6f86cbc4"]  # Replace with your actual subnet ID
-    security_groups = ["sg-096b3e9c824a7ba70"]       # Replace with your actual security group ID
-    assign_public_ip = true
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
-resource "aws_iam_role" "my_ecs_task_execution_role" {
-  name = "myEcsTaskExecutionRole"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-  ]
+output "instance_ip" {
+  description = "The public IP address of the web server"
+  value       = aws_instance.web.public_ip
 }
 
-resource "aws_iam_role_policy_attachment" "my_ecs_task_execution_role_policy" {
-  role       = aws_iam_role.my_ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-variable "docker_image" {
-  description = "Docker image name"
+variable "github_repo_url" {
+  description = "GitHub repository URL"
   type        = string
 }
